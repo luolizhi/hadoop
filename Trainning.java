@@ -35,7 +35,7 @@ public class Trainning {
 
 		// 设置输入 和 单词词频的输出路径
 		String input = "hdfs://192.168.190.128:9000/user/hadoop/input/NBCorpus/Country";
-		//调试程序所用的少量文本集，调试时注释掉23行
+		//调试程序所用的少量文本集，调试时注释掉22行
 //		String input = "hdfs://192.168.190.128:9000/user/hadoop/test/";	
 		
 		String wordsOutput = "hdfs://192.168.190.128:9000/user/hadoop/mid/wordsFrequence";
@@ -79,9 +79,9 @@ public class Trainning {
 		Predict.run(conf);//预测测试文本的类别
 		System.out.println("------Predict OK------");
 		
-		Evaluation.run(conf);//评估预测的效果
-		
+		Evaluation.run(conf);//评估预测的效果		
 		System.out.println("------Evaluation OK------");
+		
 		System.out.println("------All Over------");
 	
 	}

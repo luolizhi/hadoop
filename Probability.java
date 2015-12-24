@@ -90,7 +90,7 @@ public class Probability {
 			int tot = conf.getInt("TOTALWORDS", 0);// map中需要重新获取单词总种类数
 
 			// System.out.println("total = " + total);//total = 0无法使用，只能通过conf传值
-			// System.out.println("tot = " + tot);//这个输出是在userlog中的stdout中显示
+			 System.out.println("tot = " + tot);//这个输出是在userlog中的stdout中显示
 
 			// 输入的格式如下：
 			// ALB weekend 1
@@ -112,7 +112,7 @@ public class Probability {
 				}
 			} // 读取数据完毕，全部保存在baseMap中
 
-			int allWordsInClass = 0;
+			int allWordsInClass = 0;//每个类别中单词总数
 
 			for (Map.Entry<String, Map<String, Integer>> entries : baseMap.entrySet()) { // 遍历类别
 				allWordsInClass = fileMap.get(entries.getKey());

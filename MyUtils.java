@@ -66,14 +66,16 @@ public class MyUtils {
 		}
 		return pMap;
 	}
-	
+/*	
 	// 获取条件概率方法
 	static Map<String, Map<String, Double>> getConditionMap(Configuration conf, String dirPath) throws Exception {
 		Map<String, Map<String, Double>> condMap = new HashMap<>();
 		Path dir = new Path(dirPath);
 		FileSystem fs = dir.getFileSystem(conf);
 		String className = "";
-		for (FileStatus file : fs.listStatus(dir)) {
+		FileStatus[] stats = fs.listStatus(dir);
+		for (FileStatus file : stats) {
+			Map<String, Double> oneMap = new HashMap<>();
 			if (!file.isDir()) {//是文件时继续执行
 				Path filePath = file.getPath();// 获取文件路径
 				String fileName = filePath.getName();// 获取文件名ALB-m-00000
@@ -81,12 +83,25 @@ public class MyUtils {
 				if (temp.length == 3) {
 					className = temp[0];// 得到类别名
 				}
-				Map<String, Double> oneMap = MyUtils.getProbability(conf, filePath.toString());
+				oneMap = MyUtils.getProbability(conf, filePath.toString());
 				condMap.put(className, oneMap);
 			}
 		}
 		return condMap;
 	}
-	
-	
+	*/
+	//预测时获取子文件夹方法
+	static List<Path> getSonDir(Configuration conf, String folder) throws Exception {
+		
+		Path path = new Path(folder);
+		FileSystem fs = path.getFileSystem(conf);
+		FileStatus[] stats = fs.listStatus(path);
+		List<Path> folderPath = new ArrayList<Path>();
+		for (FileStatus stat : stats) {
+			if (stat.isDir()) {
+				folderPath.add(stat.getPath());
+			}
+		}
+		return folderPath;
+	}
 }

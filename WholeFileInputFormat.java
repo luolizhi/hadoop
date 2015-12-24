@@ -62,7 +62,7 @@ class WholeFileRecordReader extends RecordReader<LongWritable, Text>{
 			try{
 				in = fs.open(file);
 				IOUtils.readFully(in, contents, 0, contents.length);
-				value.set(contents, 0, contents.length);	
+				value.set(contents, 0, contents.length);//整个文件的内容作为value	
 			}finally{
 				IOUtils.closeStream(in);
 			}
@@ -80,7 +80,6 @@ class WholeFileRecordReader extends RecordReader<LongWritable, Text>{
 
 	@Override
 	public Text getCurrentValue() throws IOException, InterruptedException {
-		// TODO Auto-generated method stub
 		return value;
 	}
 
@@ -92,7 +91,6 @@ class WholeFileRecordReader extends RecordReader<LongWritable, Text>{
 
 	@Override
 	public void close() throws IOException {
-		// TODO Auto-generated method stub
 		
 	}
 	
