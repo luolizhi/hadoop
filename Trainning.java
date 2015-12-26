@@ -19,7 +19,7 @@ public class Trainning {
 		conf.set("mapred.job.tracker", "192.168.190.128:9001");
 		
 		//设置一个常数FILENUMBER，计算文本数不低于该常数的类别
-		conf.setInt("FILENUMBER", 50);//注释该行后，取默认的数字10
+		conf.setInt("FILENUMBER", 10);//注释该行后，取默认的数字10
 		
 		// 设置单词先验概率的保存路径
 		String priorProbality = "hdfs://192.168.190.128:9000/user/hadoop/output/priorP/priorProbability.txt";
@@ -34,9 +34,9 @@ public class Trainning {
 		conf.set("wordsInClassPath", wordsInClassPath);
 
 		// 设置输入 和 单词词频的输出路径
-		String input = "hdfs://192.168.190.128:9000/user/hadoop/input/NBCorpus/Country";
-		//调试程序所用的少量文本集，调试时注释掉22行
-//		String input = "hdfs://192.168.190.128:9000/user/hadoop/test/";	
+//		String input = "hdfs://192.168.190.128:9000/user/hadoop/input/NBCorpus/Country";
+		//新的样本
+		String input = "hdfs://192.168.190.128:9000/user/hadoop/input1/Country";	
 		
 		String wordsOutput = "hdfs://192.168.190.128:9000/user/hadoop/mid/wordsFrequence";
 		conf.set("input", input);
@@ -49,7 +49,8 @@ public class Trainning {
 	
 		//predict
 		//测试的输入输出目录
-		String testInput = "hdfs://192.168.190.128:9000/user/hadoop/test";
+//		String testInput = "hdfs://192.168.190.128:9000/user/hadoop/test";
+		String testInput = "hdfs://192.168.190.128:9000/user/hadoop/test1";//与input1对应的测试集，选取的一般作为测试集
 		conf.set("testInput", testInput);
 		
 		String testOutput = "hdfs://192.168.190.128:9000/user/hadoop/output/Predict";
@@ -70,17 +71,17 @@ public class Trainning {
 		
 		System.out.println("-------Start-------");
 		FileCount.run(conf);//统计文件个数，计算先验概率
-		System.out.println("------FileCount OK------");
-		
-		WordCount.run(conf);//统计单词个数
-		Probability.run(conf);//计算条件概率，即每个单词在各个类别中出现的概率
-		System.out.println("------Probability OK------");
-		
-		Predict.run(conf);//预测测试文本的类别
-		System.out.println("------Predict OK------");
-		
-		Evaluation.run(conf);//评估预测的效果		
-		System.out.println("------Evaluation OK------");
+//		System.out.println("------FileCount OK------");
+//		
+//		WordCount.run(conf);//统计单词个数
+//		Probability.run(conf);//计算条件概率，即每个单词在各个类别中出现的概率
+//		System.out.println("------Probability OK------");
+//		
+//		Predict.run(conf);//预测测试文本的类别
+//		System.out.println("------Predict OK------");
+//		
+//		Evaluation.run(conf);//评估预测的效果		
+//		System.out.println("------Evaluation OK------");
 		
 		System.out.println("------All Over------");
 	

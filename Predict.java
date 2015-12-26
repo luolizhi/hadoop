@@ -12,14 +12,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
@@ -56,7 +54,7 @@ public class Predict {
 		Job job = new Job(conf, "predict");
 		job.setJarByClass(Predict.class);
 
-		job.setInputFormatClass(WholeFileInputFormat.class);
+		job.setInputFormatClass(PredictInputFormat.class);
 
 		job.setMapperClass(PredictMapper.class);
 		job.setReducerClass(PredictReducer.class);
@@ -66,9 +64,9 @@ public class Predict {
 
 		String testInput = conf.get("testInput");
 
-		List<Path> paths = MyUtils.getSonDir(conf, testInput);// 由于wordcount的getsecond方法要删选文档个数，只能单独写一个
+		List<Path> paths = MyUtils.getSecondDir(conf, testInput);// 由于wordcount的getsecond方法要删选文档个数，只能单独写一个
 		for (Path path : paths) {
-			WholeFileInputFormat.addInputPath(job, path);
+			PredictInputFormat.addInputPath(job, path);
 		}
 
 		String testOutput = conf.get("testOutput");
@@ -85,9 +83,9 @@ public class Predict {
 	}
 
 	// map
-	public static class PredictMapper extends Mapper<LongWritable, Text, Text, Text> {
+	public static class PredictMapper extends Mapper<Text, Text, Text, Text> {
 
-		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
+		protected void setup(Mapper<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
 
 			Configuration conf = context.getConfiguration();
@@ -119,13 +117,8 @@ public class Predict {
 
 		}
 
-		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, Text>.Context context)
+		protected void map(Text key, Text value, Mapper<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-
-			FileSplit split = (FileSplit) context.getInputSplit();// 从context获取split，并强转成fileSplit
-			Path file = split.getPath();// 获取文件输入路径
-			String fileName = file.getName(); // 得到文件名，输出的时候写入context
-			String trueClassName = file.getParent().getName();// 得到真实类别
 
 			// 遍历preditMap如果对应的类别含有该单词value就称其概率，否在乘以notFoundMap里面的概率
 			/* Map<String, Map<String, Double>> conditionMap */
@@ -135,10 +128,10 @@ public class Predict {
 				// 用静态方法计算该文档属于哪个类别的概率
 				double p = conditionalProbabilityForClass(value.toString(), className);
 				LOG.info(className + "------->" + p);// 将一个文本所有类别下计算的概率写入log中
-				// System.out.println(className + "------->" +
-				// p);//输出在log中的stdout中
+//				System.out.println(className + "------->" +	p);//输出在log中的stdout中
 				Text prob = new Text(className + "\t" + p);
-				context.write(new Text(trueClassName + "\t" + fileName), prob);
+//				context.write(new Text(trueClassName + "\t" + fileName), prob);
+				context.write(key, prob);
 			}
 		}
 

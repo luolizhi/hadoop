@@ -3,8 +3,8 @@
 import os
 import shutil
 
-old_path = "C:\Users\lukey\Desktop\jar\NBCorpus\Country"
-new_path = "C:\Users\lukey\Desktop\jar\NBCorpus\\test"
+old_path = "C:\Users\lukey\Desktop\jar\NBCorpus\Country"#原数据集路径
+new_path = "C:\Users\lukey\Desktop\jar\NBCorpus\\test"#挑选用作测试集的路径
 
 for (dirpath,dirnames,filenames) in os.walk(old_path):
     for dirname in dirnames:#文件夹名
@@ -12,8 +12,6 @@ for (dirpath,dirnames,filenames) in os.walk(old_path):
         testpath = os.path.join(new_path,dirname)#新路径的文件夹名和之前的一样
         os.mkdir(testpath)#创建文件夹
         for (dpath,dnames,fnames) in os.walk(dir_path):#遍历每个文件夹下面的文件
-            print dpath
-            print len(fnames)
             for name in fnames[1::2]:#从第二个文件开始，每隔一个取一个，使训练集的文件不比测试集少
                 filepath = os.path.join(dpath,name)
                 shutil.move(filepath, testpath)
