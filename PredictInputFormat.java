@@ -26,22 +26,20 @@ public class PredictInputFormat extends CombineFileInputFormat<Text, Text> {
 	public List<InputSplit> getSplits(JobContext context) throws IOException {
 		Path[] paths = getInputPaths(context); // paths保存的每个类别的路径，文件夹地址
 		List<InputSplit> splits = new ArrayList<InputSplit>();
-
 		for (Path path : paths) { // 每个文件夹里面的所有文件作为一个分片
 			FileSystem fileFS = path.getFileSystem(context.getConfiguration());
-			Long len = (long) 0; // 每次重新计算分片的长度，用文件夹下面每个文件的长度之和作为分片的长度
+			Long len = (long) 0; 
 			for (FileStatus f : fileFS.listStatus(path)) {
 				len += f.getLen();
 			}
 			splits.add(new FileSplit(path, 0, len, null)); // 没有考虑主机的信息
-		}
+		}//CombineFileSplit(paths,0,len,null)
 		return splits;
 	}
 
 	@Override
 	public RecordReader<Text, Text> createRecordReader(InputSplit split, TaskAttemptContext context)
 			throws IOException {
-		// System.out.println("-8---CreatRecordReader---");
 		PredictInputRecordReader reader = new PredictInputRecordReader(); // 自己定义的recordReader
 		try {
 			reader.initialize(split, context);
@@ -58,7 +56,6 @@ public class PredictInputFormat extends CombineFileInputFormat<Text, Text> {
 		for (int i = 0; i < list.length; i++) {
 			result[i] = new Path(StringUtils.unEscapeString(list[i]));
 		}
-		// System.out.println("-5----sum_map = " + list.length);
 		return result;
 	}
 
@@ -67,10 +64,8 @@ public class PredictInputFormat extends CombineFileInputFormat<Text, Text> {
 		Configuration conf = job.getConfiguration();
 		path = path.getFileSystem(conf).makeQualified(path);
 		String dirStr = StringUtils.escapeString(path.toString());
-
 		String dirs = conf.get("mapred.input.dir");
 		conf.set("mapred.input.dir", dirs == null ? dirStr : dirs + "," + dirStr);
-		// System.out.println("-4--addInputPath---ok---");
 	}
 }
 
@@ -94,11 +89,9 @@ class PredictInputRecordReader extends RecordReader<Text, Text> {// 定制的Record
 
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException {
-		// System.out.println("-10----nextKeyValue---");
 		if (length == 0 || index == length) {
 			return false;
 		}
-
 		Path dirPath = filesplit.getPath(); // 从fileSplit对象获取输入文件路径，整个文件夹为一个分片，这就是一个文件夹的路径
 		key.set(dirPath.getName());// key设为类名即国家名
 		FileSystem fs = dirPath.getFileSystem(conf);// 获取文件系统对象
@@ -109,8 +102,7 @@ class PredictInputRecordReader extends RecordReader<Text, Text> {// 定制的Record
 //		System.out.println("----key="+key);
 		int fileLength = (int) stats[index].getLen();
 		FileSystem fsFile = file.getFileSystem(conf);
-		// 从fileSplit对象获取split的字节数，创建byte数组contents
-		byte[] contents = new byte[fileLength];
+		byte[] contents = new byte[fileLength];// 从fileSplit对象获取split的字节数，创建byte数组contents
 		try {
 			in = fsFile.open(file); // 打开文件，返回文件输入流对象
 			IOUtils.readFully(in, contents, 0, fileLength);// 将文件内容读取到byte数组中，一起作为value值
@@ -118,7 +110,6 @@ class PredictInputRecordReader extends RecordReader<Text, Text> {// 定制的Record
 			IOUtils.closeStream(in);// 关闭输入流
 		}
 		value.set(contents, 0, contents.length);// 当前文件夹中的所有内容作为value值
-//		System.out.println("---value= " + value);
 		index++;//没有自增运算会导致死循环
 		return true;
 
@@ -126,13 +117,11 @@ class PredictInputRecordReader extends RecordReader<Text, Text> {// 定制的Record
 
 	@Override
 	public Text getCurrentKey() throws IOException, InterruptedException {
-		// System.out.println("-12----getCurrentKey---");
 		return key;
 	}
 
 	@Override
 	public Text getCurrentValue() throws IOException, InterruptedException {
-		// System.out.println("-13----getCurrentValue---");
 		return value;
 	}
 
@@ -146,7 +135,6 @@ class PredictInputRecordReader extends RecordReader<Text, Text> {// 定制的Record
 
 	@Override
 	public void close() throws IOException {
-		// System.out.println("-14----close---");
 	}
 
 }

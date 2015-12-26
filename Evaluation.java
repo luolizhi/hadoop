@@ -20,13 +20,11 @@ public class Evaluation {
 
 	public static void run(Configuration conf) throws Exception {
 		String input = conf.get("result");
-
-		// 读取评估类别，计算P R F1
+		//读取评估类别，计算P R F1
 		FileSystem fs = FileSystem.get(URI.create(input), conf);
 		FSDataInputStream inputStream = fs.open(new Path(input));
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(inputStream));
 		String strLine = "";
-
 		ArrayList<String> trueAndPredict = new ArrayList<>();// 直接保存真实类别+预测类别
 		Set<String> trueClassNameSet = new TreeSet<>();// 保存真实类别
 		while ((strLine = buffer.readLine()) != null) {
@@ -61,7 +59,6 @@ public class Evaluation {
 				}
 			}
 		}
-
 		// 保存评估结果到文件中，
 		String output = conf.get("resultOut");
 		Path outputPath = new Path(output);

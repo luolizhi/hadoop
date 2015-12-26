@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -27,27 +25,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  * 
  */
 public class Predict {
-
-	private static final Log LOG = LogFactory.getLog(Predict.class);
-
 	static enum counter {// 分别表示待测文本的单词数和类别数//未能好好使用
 		words_in_file, class_counte
 	}
-
 	static Map<String, Double> priorMap = new HashMap<>();// 保存先验概率 ALB 0.375
-
-	// 每个类别里面单词的概率 abassi 3.476341324572953E-5 类别名是文件名，需要特殊处理
-	// 初步想法是将文件名解析出来，作为map的key，里面的数据作为map的value（单词 概率）
-	static Map<String, Map<String, Double>> conditionMap = new HashMap<>();
-
-	// 每个类别里面没有找到的单词的概率ALB 4.062444649191655E-7
-	static Map<String, Double> notFoundMap = new HashMap<>();
-
-	// 保存计算结果，遍历要预测的文件，循环计算不同类别的概率，初识值可以设为先验概率
-	// 先验概率 ALB 0.375（key用文件名+分类名）
-	// 每次取value累成（需要用log处理）
-	static Map<String, Double> predictMap = new HashMap<String, Double>();
-
+	static Map<String, Map<String, Double>> conditionMap = new HashMap<>();//条件概率
+	static Map<String, Double> notFoundMap = new HashMap<>();//类别中没有单词的概率
+	// 保存计算结果，遍历要预测的文件，循环计算不同类别的概率，初识值设为先验概率
+	// 每次取value累加（需要用Math.log处理）
+	static Map<String, Double> predictMap = new HashMap<String, Double>();//预测的类别和概率
 	public static int run(Configuration conf) throws Exception {
 		conf.set("mapred.job.tracker", "192.168.190.128:9001");
 
@@ -64,7 +50,7 @@ public class Predict {
 
 		String testInput = conf.get("testInput");
 
-		List<Path> paths = MyUtils.getSecondDir(conf, testInput);// 由于wordcount的getsecond方法要删选文档个数，只能单独写一个
+		List<Path> paths = MyUtils.getSecondDir(conf, testInput);
 		for (Path path : paths) {
 			PredictInputFormat.addInputPath(job, path);
 		}
@@ -73,28 +59,24 @@ public class Predict {
 		FileOutputFormat.setOutputPath(job, new Path(testOutput));
 
 		int exitCode = job.waitForCompletion(true) ? 0 : 1;
-
-		// 调用计数器
+		// 调用计数器，只是用来测试查看
 		Counters counters = job.getCounters();
 		Counter c1 = counters.findCounter(counter.class_counte);
 		System.out.println(c1.getDisplayName() + " : " + c1.getValue());// 测试输出文件所有类别和测集个数试的乘积
-
 		return exitCode;
 	}
 
-	// map
 	public static class PredictMapper extends Mapper<Text, Text, Text, Text> {
 
 		protected void setup(Mapper<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-
 			Configuration conf = context.getConfiguration();
-
+			
 			String priorPath = conf.get("priorProbality");// 读取先验概率
-			priorMap = MyUtils.getProbability(conf, priorPath);
+			priorMap = MyUtils.getProbability(conf, priorPath);//调用方法
 
 			String notFoundPath = conf.get("notFoundPath");// 读取每个类别没有找到单词的概率
-			notFoundMap = MyUtils.getProbability(conf, notFoundPath);
+			notFoundMap = MyUtils.getProbability(conf, notFoundPath);//调用方法
 
 			String conditionPath = conf.get("conditionPath");// 读取条件概率
 			Path condPath = new Path(conditionPath);
@@ -106,40 +88,30 @@ public class Predict {
 					String fileName = filePath.getName();
 					String[] temp = fileName.split("-");
 					if (temp.length == 3) {
-						String className = temp[0];// 得到类别名
-						// 根据文件路径读取文件里面内容保存到map
-						Map<String, Double> oneMap = new HashMap<>();
+						String className = temp[0];// 得到类别名			
+						Map<String, Double> oneMap = new HashMap<>();// 根据文件路径读取文件里面内容保存到map
 						oneMap = MyUtils.getProbability(conf, filePath.toString());
 						conditionMap.put(className, oneMap);
 					}
 				}
 			}
-
 		}
 
 		protected void map(Text key, Text value, Mapper<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-
 			// 遍历preditMap如果对应的类别含有该单词value就称其概率，否在乘以notFoundMap里面的概率
 			/* Map<String, Map<String, Double>> conditionMap */
-
 			for (String className : priorMap.keySet()) {// 遍历所有可能的类别
 				context.getCounter(counter.class_counte).increment(1);// 每个map都会统计所有的类别
 				// 用静态方法计算该文档属于哪个类别的概率
 				double p = conditionalProbabilityForClass(value.toString(), className);
-				LOG.info(className + "------->" + p);// 将一个文本所有类别下计算的概率写入log中
-//				System.out.println(className + "------->" +	p);//输出在log中的stdout中
 				Text prob = new Text(className + "\t" + p);
-//				context.write(new Text(trueClassName + "\t" + fileName), prob);
-				context.write(key, prob);
+				context.write(key, prob);//key是类别+文件名
 			}
 		}
 
 		public static double conditionalProbabilityForClass(String content, String className) {
-			/*
-			 * 计算某个文本属于某一类别的概率
-			 */
-			// className下面每个单词的概率
+			 // 计算某个文本属于某一类别的概率// className下面每个单词的概率
 			Map<String, Double> condMap = conditionMap.get(className);// class中所有出现单词的概率
 			double notFindProbability = notFoundMap.get(className);// class中没有出现单词的概率
 			double priorProbability = priorMap.get(className);// class的先验概率
@@ -159,7 +131,6 @@ public class Predict {
 
 	}
 
-	// reduce
 	public static class PredictReducer extends Reducer<Text, Text, Text, Text> {
 
 		@Override
@@ -171,14 +142,12 @@ public class Predict {
 			for (Text value : values) {// 遍历文本的所有属于所有类别的概率
 				String[] temp = value.toString().split("\t");
 				double p = Double.parseDouble(temp[1]);
-				// double比大小可以直接比，相等要用abs小于一个很小的数
-				if (p > maxP) {
-					maxP = p;
-					maxClass = temp[0];
+				if (p > maxP) {//概率大于最大值
+					maxP = p;//将其设成最大值
+					maxClass = temp[0];//保存最大值的类别
 				}
 			}
 			context.write(key, new Text(maxClass));
 		}
 	}
-
 }

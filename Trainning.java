@@ -71,17 +71,17 @@ public class Trainning {
 		
 		System.out.println("-------Start-------");
 		FileCount.run(conf);//统计文件个数，计算先验概率
-//		System.out.println("------FileCount OK------");
-//		
-//		WordCount.run(conf);//统计单词个数
-//		Probability.run(conf);//计算条件概率，即每个单词在各个类别中出现的概率
-//		System.out.println("------Probability OK------");
-//		
-//		Predict.run(conf);//预测测试文本的类别
-//		System.out.println("------Predict OK------");
-//		
-//		Evaluation.run(conf);//评估预测的效果		
-//		System.out.println("------Evaluation OK------");
+		System.out.println("------FileCount OK------");
+		
+		WordCount.run(conf);//统计单词个数
+		Probability.run(conf);//计算条件概率，即每个单词在各个类别中出现的概率
+		System.out.println("------Probability OK------");
+		
+		Predict.run(conf);//预测测试文本的类别
+		System.out.println("------Predict OK------");
+		
+		Evaluation.run(conf);//评估预测的效果		
+		System.out.println("------Evaluation OK------");
 		
 		System.out.println("------All Over------");
 	
